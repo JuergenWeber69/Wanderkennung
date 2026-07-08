@@ -1,0 +1,45 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project overview
+
+Python pipeline that turns a registered point cloud of a building floor (E57/LAS) into a closed DXF wall-axis drawing (with wall thickness) for import into BricsCAD. The full development plan — architecture, library choices, phase-by-phase spec with effort estimates, and known risks — is in `docs/entwicklungsplan.html` (German). Read it before implementing any phase; this CLAUDE.md only summarizes structure and conventions.
+
+The project is organized as **13 phases (P0–P13)**, each independently testable, executed roughly in order (P11 calibration runs in parallel with P5–P9). Only Phase 1 (project setup) is complete; all processing modules are stubs (`raise NotImplementedError`) to be filled in phase by phase per the plan.
+
+## Commands
+
+```bash
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+python pipeline.py <eingabe> <config.yaml> <ausgabe.dxf>
+python batch_runner.py <eingabe> <geschosse.csv> <config.yaml> <ausgabe_verzeichnis>
+```
+
+No test runner or linter is configured yet. Tests belong in `tests/test_<modul>.py` per module, but the suite doesn't exist yet — set up a framework (pytest is the natural choice given the dependency stack) before adding the first test.
+
+## Architecture
+
+Processing chain, each phase feeding the next (see `docs/entwicklungsplan.html` §2 for the full diagram):
+
+```
+Rohpunktwolke → io/reader.py → preprocessing/denoise.py → preprocessing/slicing.py
+  → geometry/normals.py → geometry/plane_segmentation.py (RANSAC)
+  → geometry/wall_classification.py → geometry/fragment_clustering.py (DBSCAN)
+  → geometry/wall_pairing.py → geometry/polygon_closing.py (shapely)
+  → io/writer_dxf.py (ezdxf)
+```
+
+- `pipeline.py` — orchestrates all phases for a single floor; loads a YAML config and will wire the modules together as they're implemented.
+- `batch_runner.py` — reads a `Name;Hoehe` floor list (same format as the existing LISP tool `PWSCHNITT-BATCH`) and runs `pipeline` per floor, writing one DXF per floor. This is the integration point with the existing BricsCAD/LISP workflow (Phase 12).
+- `config/parameter_default.yaml` — all tunable thresholds (RANSAC distance, angle tolerances, cluster radius, wall thickness bounds, etc.). **Never hardcode these values in module code** — the plan explicitly calls out per-scanner/per-building-type recalibration (Phase 11) as a first-class requirement, so thresholds must stay in per-project YAML files named `config/parameter_<projekttyp>.yaml`.
+- The `io/` package name shadows Python's stdlib `io` module — only import it as `wanderkennung.io` / relative package imports, never rely on a bare `import io` resolving to the stdlib inside this project's own scripts.
+
+## Conventions
+
+- Code identifiers and comments in this repo mix German domain terms (e.g. `wandkandidat`, `gruppiere_fragmente`, `schliesse_ecken`) matching the plan's vocabulary — keep new functions consistent with that naming rather than translating to English.
+- Each phase's expected effort and acceptance bar is documented in the plan; when implementing a phase, visually verify intermediate results (matplotlib / `open3d.visualization`) as described there rather than trusting numeric output alone — this is called out as essential for calibration-heavy phases (P5, P7, P8, P9).
+- DXF output uses layer `WAND_ACHSEN` (configurable via `dxf_layer_wandachsen`), matching the existing LISP tool `PWWAND-SNAP` layer convention.

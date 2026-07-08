@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Entwicklungsplan — Python-Pipeline zur automatisierten Wanderkennung</title>
+<style>
+  @page { size: A4; margin: 20mm 18mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #1a1a1a;
+    line-height: 1.55;
+    font-size: 10.5pt;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  h1 { font-size: 20pt; border-bottom: 3px solid #1D3448; padding-bottom: 0.4rem; margin-bottom: 0.2rem; }
+  .subtitle { color: #4B6169; font-size: 11pt; margin-bottom: 1.6rem; }
+  h2 {
+    font-size: 14pt; color: #1D3448; border-left: 5px solid #1F7A76;
+    padding-left: 0.6rem; margin-top: 2.4rem; page-break-after: avoid;
+  }
+  h3 { font-size: 11.5pt; color: #1D3448; margin-top: 1.3rem; page-break-after: avoid; }
+  h4 { font-size: 10.5pt; color: #1D3448; margin-top: 1rem; margin-bottom: 0.3rem; }
+  table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 9.3pt; }
+  th, td { border: 1px solid #cbd6d3; padding: 0.4rem 0.55rem; text-align: left; vertical-align: top; }
+  th { background: #1D3448; color: #fff; font-size: 8.6pt; text-transform: uppercase; letter-spacing: 0.03em; }
+  tr:nth-child(even) td { background: #F2F5F4; }
+  .phase {
+    border: 1px solid #cbd6d3; border-left: 6px solid #1F7A76;
+    background: #FBFCFA; padding: 1rem 1.2rem; margin: 1.3rem 0;
+    page-break-inside: avoid;
+  }
+  .phase .phase-nr {
+    display: inline-block; background: #1F7A76; color: #fff; font-weight: 700;
+    font-size: 9.5pt; padding: 0.15rem 0.6rem; border-radius: 3px; margin-right: 0.5rem;
+  }
+  .phase h3 { display: inline; margin-top: 0; }
+  .phase .meta { font-size: 9pt; color: #4B6169; margin: 0.4rem 0 0.7rem 0; }
+  .box { border: 1px solid #cbd6d3; border-left-width: 5px; padding: 0.8rem 1rem; margin: 1rem 0; font-size: 9.6pt; page-break-inside: avoid; }
+  .tipp { background: #FBE6D6; border-left-color: #E1650C; }
+  .achtung { background: #F7DEDA; border-left-color: #AE3527; }
+  .info { background: #DCEEEC; border-left-color: #1F7A76; }
+  .box-titel { font-weight: 700; font-size: 8.6pt; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.3rem; }
+  code { font-family: 'Consolas', monospace; background: #eef2f1; padding: 0.05rem 0.3rem; border-radius: 2px; font-size: 92%; }
+  pre {
+    background: #12222F; color: #DCE9E7; font-family: 'Consolas', monospace;
+    font-size: 8.8pt; padding: 0.9rem 1rem; overflow-x: auto; border-radius: 4px;
+    line-height: 1.5; page-break-inside: avoid; margin: 0.8rem 0;
+  }
+  pre .c { color: #5E7B82; font-style: italic; }
+  .toc { background: #F2F5F4; border: 1px solid #cbd6d3; padding: 0.9rem 1.2rem; margin-bottom: 1.6rem; font-size: 9.3pt; columns: 2; column-gap: 2rem; }
+  .toc ol { margin: 0.3rem 0 0 1.1rem; padding: 0; }
+  .toc a { color: #1D3448; text-decoration: none; }
+  .modultree { font-family: 'Consolas', monospace; font-size: 9pt; background: #F2F5F4; border: 1px solid #cbd6d3; padding: 0.9rem 1.1rem; white-space: pre; }
+  footer { margin-top: 3rem; border-top: 1px solid #cbd6d3; padding-top: 0.6rem; font-size: 8.5pt; color: #4B6169; }
+</style>
+</head>
+<body>
+
+<h1>Entwicklungsplan: Python-Pipeline zur automatisierten Wanderkennung</h1>
+<p class="subtitle">Vollständiger Weg von der rohen Punktwolke bis zum fertigen DXF-Wandachsen-Export — Architektur, Bibliotheken, Phasenplan, Aufwandsschätzung und Integrationskonzept in die bestehende BricsCAD-/Ladezentrale-Umgebung. Stand: 05.07.2026.</p>
+
+<div class="toc">
+  <strong>Inhalt</strong>
+  <ol>
+    <li>Zielsetzung &amp; Abgrenzung</li>
+    <li>Gesamtarchitektur</li>
+    <li>Technologie- &amp; Bibliotheksauswahl</li>
+    <li>Modul-/Projektstruktur</li>
+    <li>Phase 0 — Zieldefinition &amp; Testdaten</li>
+    <li>Phase 1 — Projekt-Setup</li>
+    <li>Phase 2 — Dateneinlesen &amp; Vorverarbeitung</li>
+    <li>Phase 3 — Geschosszuschnitt</li>
+    <li>Phase 4 — Normalenschätzung</li>
+    <li>Phase 5 — Ebenensegmentierung</li>
+    <li>Phase 6 — Wand-Klassifizierung</li>
+    <li>Phase 7 — Fragment-Clustering</li>
+    <li>Phase 8 — Wandpaarung &amp; Achsberechnung</li>
+    <li>Phase 9 — Eckenschluss &amp; Grundrisspolygon</li>
+    <li>Phase 10 — DXF-Export</li>
+    <li>Phase 11 — Kalibrierung an Realdaten</li>
+    <li>Phase 12 — Integration in bestehenden Workflow</li>
+    <li>Phase 13 — Dokumentation &amp; Wartung</li>
+    <li>Gesamtaufwandsschätzung</li>
+    <li>Risiken &amp; Grenzen</li>
+  </ol>
+</div>
+
+<h2 id="ziel">1. Zielsetzung &amp; Abgrenzung</h2>
+<p>Die Pipeline soll aus einer registrierten Punktwolke eines Gebäudegeschosses automatisiert ein DXF mit fertigen Wandachsen (inkl. Wandstärke, geschlossenes Grundrisspolygon) erzeugen — als direkte Zeichenunterlage bzw. Ausgangsbasis für die Weiterbearbeitung in BricsCAD. Anders als der CloudCompare-RANSAC-Weg (siehe separates Dokument) deckt diese Pipeline die <strong>komplette Kette</strong> ab: Ebene → Wandkandidat → Wandachse → geschlossener Grundriss.</p>
+<div class="box info">
+  <div class="box-titel">Abgrenzung</div>
+  <p>Nicht Ziel dieser ersten Ausbaustufe: automatische Erkennung von Türen/Fenstern als eigene BIM-Objekte, automatische Stockwerkstrennung ohne Vorgabe, oder eine vollständige IFC-Modellerzeugung. Diese Punkte sind mögliche spätere Ausbaustufen, sobald die Grundpipeline stabil läuft.</p>
+</div>
+
+<h2 id="architektur">2. Gesamtarchitektur</h2>
+<p>Die Pipeline ist als Abfolge unabhängiger, jeweils für sich testbarer Verarbeitungsschritte konzipiert (klassische Verarbeitungskette, keine monolithische Funktion), damit jede Phase separat kalibriert und bei Bedarf ausgetauscht werden kann:</p>
+<div class="modultree">Rohpunktwolke (E57/LAS)
+      │
+      ▼
+[1] Einlesen &amp; Vorverarbeitung  ──▶  bereinigte, downgesampelte Wolke
+      │
+      ▼
+[2] Geschosszuschnitt (Höhenband)  ──▶  Teilwolke pro Geschoss
+      │
+      ▼
+[3] Normalenschätzung  ──▶  Wolke mit konsistenten Normalen
+      │
+      ▼
+[4] Ebenensegmentierung (RANSAC)  ──▶  Liste erkannter Ebenen-Patches
+      │
+      ▼
+[5] Wand-Klassifizierung  ──▶  gefilterte Liste Wandkandidaten
+      │
+      ▼
+[6] Fragment-Clustering  ──▶  zusammengeführte Wandflächen (Öffnungen überbrückt)
+      │
+      ▼
+[7] Wandpaarung &amp; Achsberechnung  ──▶  Mittelachsen mit Wandstärke
+      │
+      ▼
+[8] Eckenschluss  ──▶  geschlossenes Grundrisspolygon
+      │
+      ▼
+[9] DXF-Export  ──▶  Datei für BricsCAD-Import</div>
+
+<h2 id="technologie">3. Technologie- &amp; Bibliotheksauswahl</h2>
+<table>
+  <tr><th>Zweck</th><th>Bibliothek</th><th>Bemerkung</th></tr>
+  <tr><td>Punktwolken-I/O, Normalen, RANSAC-Grundfunktionen</td><td><code>open3d</code></td><td>bringt Einlesen (PLY/PCD/XYZ direkt, LAS/E57 über Zusatzkonverter), Downsampling, Normalenschätzung und Ebenen-RANSAC bereits mit</td></tr>
+  <tr><td>LAS/LAZ-Einlesen</td><td><code>laspy</code></td><td>falls Rohdaten im LAS-Format vorliegen; Konvertierung nach Open3D-Punktformat</td></tr>
+  <tr><td>E57-Einlesen</td><td><code>pye57</code></td><td>Zugriff auf E57-Container (Scannerformat u. a. von Leica, Faro)</td></tr>
+  <tr><td>Numerik/Arrays</td><td><code>numpy</code></td><td>Grundlage für alle Punktoperationen</td></tr>
+  <tr><td>Clustering</td><td><code>scikit-learn</code> (DBSCAN)</td><td>Gruppierung von Ebenen-Fragmenten, die durch Öffnungen getrennt sind</td></tr>
+  <tr><td>2D-Geometrie (Linien, Polygone, Verschneidung)</td><td><code>shapely</code></td><td>Eckenschluss, Verlängern/Verschneiden von Wandsegmenten, Polygonbildung</td></tr>
+  <tr><td>DXF-Erzeugung</td><td><code>ezdxf</code></td><td>Layer-Struktur, Linien/Polylinien, kompatibel mit BricsCAD-Import</td></tr>
+  <tr><td>Visualisierung/Debugging</td><td><code>matplotlib</code>, <code>open3d.visualization</code></td><td>Kontrolle der Zwischenergebnisse pro Phase — essenziell für die Kalibrierung</td></tr>
+  <tr><td>Konfiguration</td><td><code>PyYAML</code> oder <code>tomllib</code></td><td>Parametersätze pro Gebäudetyp/Scanner auslagerbar halten (siehe Phase 11)</td></tr>
+</table>
+<div class="box tipp">
+  <div class="box-titel">Warum Python statt Java</div>
+  <p>Die relevanten Bibliotheken für Punktwolkenverarbeitung (Open3D, PCL-Bindings, Scikit-learn, Shapely) sind im Python-Ökosystem ausgereift und gut dokumentiert. Ein äquivalenter Java-Stack würde bedeuten, diese Bausteine selbst nachzubauen oder auf deutlich weniger gepflegte Bibliotheken auszuweichen — bei gleichem Ziel unnötiger Mehraufwand.</p>
+</div>
+
+<h2 id="struktur">4. Modul-/Projektstruktur</h2>
+<div class="modultree">wanderkennung/
+├── config/
+│   └── parameter_<projekttyp>.yaml      # Parametersätze je Gebäudetyp/Scanner
+├── io/
+│   ├── reader.py                        # E57/LAS-Einlesen, Chunking
+│   └── writer_dxf.py                    # DXF-Export, Layer-Konventionen
+├── preprocessing/
+│   ├── denoise.py                       # SOR-Filter, Downsampling
+│   └── slicing.py                       # Geschoss-/Höhenbandzuschnitt
+├── geometry/
+│   ├── normals.py                       # Normalenschätzung/-orientierung
+│   ├── plane_segmentation.py            # RANSAC-Ebenenerkennung
+│   ├── wall_classification.py           # Vertikalitäts-/Größenfilter
+│   ├── fragment_clustering.py           # DBSCAN-Zusammenführung
+│   ├── wall_pairing.py                  # Achsbildung, Wandstärke
+│   └── polygon_closing.py               # Eckenschluss, Verschneidung
+├── pipeline.py                          # Orchestrierung aller Phasen
+├── batch_runner.py                      # Stapelverarbeitung je Geschossliste
+└── tests/
+    └── test_<modul>.py                  # Unit-Tests je Modul mit Testdaten</div>
+
+<h2 id="phase0">5. Phase 0 — Zieldefinition &amp; Testdaten</h2>
+<div class="phase">
+  <span class="phase-nr">P0</span><h3>Zieldefinition &amp; Testdaten</h3>
+  <p class="meta">Geschätzter Aufwand: 1–2 Tage</p>
+  <p>Bevor die erste Zeile Code entsteht: ein bis zwei reale, „unordentliche" Bestandsaufnahmen (nicht ideale Beispieldaten) als feste Testgrundlage festlegen. Erwartungshaltung an Genauigkeit definieren (z. B. Wandachse auf ±2 cm, Wandstärke auf ±1 cm). Ohne diesen Schritt fehlt später der Maßstab, an dem die Kalibrierung (Phase 11) beurteilt wird.</p>
+</div>
+
+<h2 id="phase1">6. Phase 1 — Projekt-Setup</h2>
+<div class="phase">
+  <span class="phase-nr">P1</span><h3>Projekt-Setup</h3>
+  <p class="meta">Geschätzter Aufwand: 0,5–1 Tag</p>
+  <p>Virtuelle Umgebung anlegen, Kernbibliotheken installieren, Projektstruktur (Abschnitt 4) anlegen, Versionsverwaltung (Git) einrichten.</p>
+  <pre>python -m venv venv
+<span class="c"># Windows:</span>
+venv\Scripts\activate
+pip install open3d laspy pye57 numpy scikit-learn shapely ezdxf pyyaml matplotlib</pre>
+</div>
+
+<h2 id="phase2">7. Phase 2 — Dateneinlesen &amp; Vorverarbeitung</h2>
+<div class="phase">
+  <span class="phase-nr">P2</span><h3>Dateneinlesen &amp; Vorverarbeitung</h3>
+  <p class="meta">Geschätzter Aufwand: 3–5 Tage</p>
+  <p><strong>Warum aufwendiger als es klingt:</strong> E57/LAS-Dateien großer Bestandsaufnahmen sprengen schnell den Arbeitsspeicher. Es braucht Chunking/Tiling (wolke in Kacheln laden und verarbeiten, ähnlich dem Prinzip, das PointCab bereits nutzt) statt naivem Volleinlesen.</p>
+  <h4>Teilschritte</h4>
+  <ul>
+    <li>Format-Erkennung und Einlesen (E57 über <code>pye57</code>, LAS über <code>laspy</code>)</li>
+    <li>Umrechnung in ein einheitliches internes Punktformat (XYZ + ggf. Intensität/Farbe)</li>
+    <li>Rauschfilterung (statistischer Ausreißerfilter, analog zum SOR-Filter aus CloudCompare)</li>
+    <li>Downsampling (Voxel-Grid, z. B. 3–5 mm Kantenlänge) zur Reduktion der Punktzahl auf ein handhabbares Maß</li>
+  </ul>
+  <pre>import open3d as o3d
+
+pcd = o3d.io.read_point_cloud(pfad)
+pcd, _ = pcd.remove_statistical_outlier(nb_neighbors=8, std_ratio=1.2)
+pcd = pcd.voxel_down_sample(voxel_size=0.004)  <span class="c"># 4 mm</span></pre>
+  <div class="box achtung">
+    <div class="box-titel">Achtung</div>
+    <p>Downsampling-Größe und Filterstärke sind projektabhängig (Scanner-Rauschverhalten unterscheidet sich je nach Gerät und Aufnahmeabstand) — feste Werte im Code sind ein Anti-Pattern, deshalb Auslagerung in die Konfigurationsdatei (siehe Phase 11).</p>
+  </div>
+</div>
+
+<h2 id="phase3">8. Phase 3 — Geschosszuschnitt</h2>
+<div class="phase">
+  <span class="phase-nr">P3</span><h3>Geschosszuschnitt (Höhenband)</h3>
+  <p class="meta">Geschätzter Aufwand: 1–2 Tage</p>
+  <p>Analog zum bestehenden LISP-Tool <code>PWSCHNITT-BATCH</code> wird eine einfache Textdatei im Format <code>Name;Hoehe</code> eingelesen, um pro Geschoss automatisiert das passende Höhenband aus der Gesamtwolke zu extrahieren. Diese Konsistenz zum bestehenden Ladezentrale-Format erleichtert später die Integration (Phase 12).</p>
+  <pre>def slice_by_height(pcd, z_min, z_max):
+    pts = np.asarray(pcd.points)
+    mask = (pts[:, 2] >= z_min) &amp; (pts[:, 2] &lt;= z_max)
+    return pcd.select_by_index(np.where(mask)[0])</pre>
+</div>
+
+<h2 id="phase4">9. Phase 4 — Normalenschätzung</h2>
+<div class="phase">
+  <span class="phase-nr">P4</span><h3>Normalenschätzung</h3>
+  <p class="meta">Geschätzter Aufwand: 1–2 Tage</p>
+  <p>Normalenberechnung mit lokalem Suchradius (proportional zur mittleren Punktdichte nach dem Downsampling in Phase 2) und anschließende konsistente Ausrichtung. Fehlerhafte oder inkonsistente Normalen sind die häufigste Ursache für schlechte Ergebnisse in der nachfolgenden Ebenensegmentierung.</p>
+  <pre>pcd.estimate_normals(
+    search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.02, max_nn=30)
+)
+pcd.orient_normals_consistent_tangent_plane(k=15)</pre>
+</div>
+
+<h2 id="phase5">10. Phase 5 — Ebenensegmentierung</h2>
+<div class="phase">
+  <span class="phase-nr">P5</span><h3>Ebenensegmentierung (RANSAC)</h3>
+  <p class="meta">Geschätzter Aufwand: 4–7 Tage (inkl. erster Parameterkalibrierung)</p>
+  <p>Kernstück der Pipeline. Iteratives RANSAC: größte Ebene finden, zugehörige Punkte entfernen, nächste Ebene finden — bis keine ausreichend große Ebene mehr übrig ist. Open3D bringt <code>segment_plane</code> als Grundbaustein mit; die Iterationslogik (Schleife über mehrere Ebenen) muss selbst ergänzt werden.</p>
+  <pre>def segment_planes(pcd, distance_threshold, min_points, max_planes=60):
+    ebenen = []
+    rest = pcd
+    for _ in range(max_planes):
+        if len(rest.points) &lt; min_points:
+            break
+        modell, inliers = rest.segment_plane(
+            distance_threshold=distance_threshold,
+            ransac_n=3, num_iterations=2000
+        )
+        if len(inliers) &lt; min_points:
+            break
+        ebene = rest.select_by_index(inliers)
+        ebenen.append((modell, ebene))
+        rest = rest.select_by_index(inliers, invert=True)
+    return ebenen, rest</pre>
+  <div class="box achtung">
+    <div class="box-titel">Achtung — hier entsteht der Großteil des Zeitaufwands</div>
+    <p><code>distance_threshold</code> und <code>min_points</code> müssen an echten Daten mehrfach nachjustiert werden: zu strenge Werte übersehen echte Wände, zu tolerante Werte verschmelzen Wand mit angrenzenden Möbelflächen. Diese Kalibrierschleife (Parameter ändern → Ergebnis visuell prüfen → erneut testen) ist iterativ und lässt sich nicht vorab exakt terminieren.</p>
+  </div>
+</div>
+
+<h2 id="phase6">11. Phase 6 — Wand-Klassifizierung</h2>
+<div class="phase">
+  <span class="phase-nr">P6</span><h3>Wand-Klassifizierung</h3>
+  <p class="meta">Geschätzter Aufwand: 3–5 Tage</p>
+  <p>Aus der Liste erkannter Ebenen werden Wandkandidaten anhand mehrerer Kriterien gefiltert:</p>
+  <ul>
+    <li><strong>Vertikalität:</strong> Winkel der Ebenennormale zur Z-Achse nahe 90°</li>
+    <li><strong>Höhenausdehnung:</strong> Ebene muss über einen Großteil der Geschosshöhe reichen (unterscheidet Wand von z. B. einer Tischplattenkante)</li>
+    <li><strong>Flächengröße:</strong> Mindestausdehnung in der Horizontalen, um kleine Möbelflächen auszuschließen</li>
+  </ul>
+  <pre>def ist_wandkandidat(modell, ebene, min_hoehe, min_breite):
+    normale = np.array(modell[:3])
+    winkel_zur_z = np.degrees(np.arccos(abs(normale[2])))
+    bbox = ebene.get_axis_aligned_bounding_box()
+    hoehe = bbox.get_extent()[2]
+    breite = max(bbox.get_extent()[0], bbox.get_extent()[1])
+    return (80 &lt;= winkel_zur_z &lt;= 100) and hoehe &gt;= min_hoehe and breite &gt;= min_breite</pre>
+</div>
+
+<h2 id="phase7">12. Phase 7 — Fragment-Clustering</h2>
+<div class="phase">
+  <span class="phase-nr">P7</span><h3>Fragment-Clustering (Öffnungen überbrücken)</h3>
+  <p class="meta">Geschätzter Aufwand: 4–6 Tage</p>
+  <p>Tür- und Fensteröffnungen zerteilen eine durchgehende Wand in mehrere separate RANSAC-Ebenen mit nahezu identischer Ausrichtung und Position. Diese Fragmente müssen anhand von Koplanarität (gleiche Ebenengleichung innerhalb einer Toleranz) und räumlicher Nähe wieder zu einer logischen „Wand" zusammengeführt werden — klassisch mit <code>DBSCAN</code> auf den projizierten 2D-Mittelpunkten der Fragmente.</p>
+  <pre>from sklearn.cluster import DBSCAN
+
+def gruppiere_fragmente(wandkandidaten, eps=0.3, min_samples=1):
+    merkmale = [projiziere_auf_ebene(m, e) for m, e in wandkandidaten]
+    labels = DBSCAN(eps=eps, min_samples=min_samples).fit_predict(merkmale)
+    return labels</pre>
+  <div class="box tipp">
+    <div class="box-titel">Tipp</div>
+    <p>Als Clustermerkmal nicht nur die Position, sondern auch den Ebenen-Normalenvektor einbeziehen (z. B. gewichtete Distanz aus Position + Winkelabweichung), sonst werden zwei tatsächlich unterschiedliche, aber räumlich nahe Wände fälschlich zusammengeführt.</p>
+  </div>
+</div>
+
+<h2 id="phase8">13. Phase 8 — Wandpaarung &amp; Achsberechnung</h2>
+<div class="phase">
+  <span class="phase-nr">P8</span><h3>Wandpaarung &amp; Achsberechnung</h3>
+  <p class="meta">Geschätzter Aufwand: 5–8 Tage</p>
+  <p>Für jede gruppierte Wand (Phase 7) wird die gegenüberliegende, parallele Fläche gesucht (z. B. Innen- und Außenseite derselben Wand). Aus dem Abstand der beiden Flächen ergibt sich die Wandstärke, die Mittelebene liefert die Wandachse.</p>
+  <ul>
+    <li>Parallelitätsprüfung: Winkel zwischen zwei Ebenennormalen unterhalb einer Toleranz (z. B. 5°)</li>
+    <li>Abstandsprüfung: liegt der Ebenenabstand in einem plausiblen Wandstärkenbereich (z. B. 8–40 cm)?</li>
+    <li>Mittelachse: geometrisches Mittel der beiden Ebenengleichungen</li>
+  </ul>
+  <p>Sonderfälle, die hier behandelt werden müssen: einschalige Wände ohne erkennbare Gegenfläche (z. B. nur eine Seite gescannt — dann Standard-Wandstärke aus Konfiguration annehmen), T-Stöße und Eckverbindungen mehrerer Wände.</p>
+</div>
+
+<h2 id="phase9">14. Phase 9 — Eckenschluss &amp; Grundrisspolygon</h2>
+<div class="phase">
+  <span class="phase-nr">P9</span><h3>Eckenschluss &amp; Grundrisspolygon</h3>
+  <p class="meta">Geschätzter Aufwand: 5–8 Tage</p>
+  <p>Die einzelnen Wandachsen (Liniensegmente aus Phase 8) müssen zu einem geschlossenen Grundrisspolygon verschnitten werden: Enden benachbarter Wandsegmente innerhalb eines Suchradius automatisch verlängern oder kappen, damit sie sich exakt treffen. Mit <code>shapely</code> lassen sich Linien verlängern und Schnittpunkte berechnen.</p>
+  <pre>from shapely.geometry import LineString
+from shapely.ops import unary_union, polygonize
+
+def schliesse_ecken(liniensegmente, suchradius=0.15):
+    verlaengert = [verlaengere_segment(s, suchradius) for s in liniensegmente]
+    vereinigt = unary_union(verlaengert)
+    return list(polygonize(vereinigt))</pre>
+  <div class="box info">
+    <div class="box-titel">Bezug zur bestehenden LISP-Logik</div>
+    <p>Die Rechtwinkel-Ausrichtung des bereits vorhandenen <code>PWWAND-SNAP</code>-Tools (Snapping auf 0/90/180/270° innerhalb einer Winkeltoleranz) ist konzeptionell dieselbe Idee wie hier — sie lässt sich als zusätzlicher Nachbearbeitungsschritt auf die berechneten Achsen übertragen, um leicht schiefe Bestandswände optional zu begradigen.</p>
+  </div>
+</div>
+
+<h2 id="phase10">15. Phase 10 — DXF-Export</h2>
+<div class="phase">
+  <span class="phase-nr">P10</span><h3>DXF-Export</h3>
+  <p class="meta">Geschätzter Aufwand: 2–3 Tage</p>
+  <p>Export der fertigen Wandachsen (und optional der Wandstärke als parallele Konturlinien) als DXF, mit Layer-Konvention passend zur bestehenden Ladezentrale (z. B. <code>WAND_ACHSEN</code>, analog zum Layer aus <code>PWWAND-SNAP</code>).</p>
+  <pre>import ezdxf
+
+def exportiere_dxf(polygone, pfad, layer="WAND_ACHSEN"):
+    doc = ezdxf.new()
+    doc.layers.new(name=layer)
+    msp = doc.modelspace()
+    for poly in polygone:
+        punkte = list(poly.exterior.coords)
+        msp.add_lwpolyline(punkte, dxfattribs={"layer": layer, "closed": True})
+    doc.saveas(pfad)</pre>
+</div>
+
+<h2 id="phase11">16. Phase 11 — Kalibrierung an Realdaten</h2>
+<div class="phase">
+  <span class="phase-nr">P11</span><h3>Kalibrierung an Realdaten</h3>
+  <p class="meta">Geschätzter Aufwand: 5–10 Tage (parallel zu P5–P9, nicht rein sequenziell)</p>
+  <p>Alle Schwellwerte (Distanzschwelle, Winkeltoleranzen, Mindestflächen, Cluster-Radien) werden in eine YAML-Konfigurationsdatei pro Gebäudetyp/Scanner ausgelagert. Anhand der in Phase 0 festgelegten Testdaten werden mehrere Durchläufe gefahren, Ergebnis gegen Referenzmaße geprüft, Parameter nachjustiert. Dieser Schritt ist der Hauptgrund, warum die Gesamtentwicklung eher in Wochen als in Tagen zu denken ist — reale Bestandsdaten verhalten sich nie wie synthetische Testdaten.</p>
+  <pre>epsilon_plane: 0.015
+min_points_plane: 800
+normal_threshold_deg: 25
+wand_min_hoehe: 2.0
+wand_min_breite: 0.4
+wandstaerke_min: 0.08
+wandstaerke_max: 0.40
+cluster_eps: 0.3
+eckenschluss_suchradius: 0.15</pre>
+</div>
+
+<h2 id="phase12">17. Phase 12 — Integration in bestehenden Workflow</h2>
+<div class="phase">
+  <span class="phase-nr">P12</span><h3>Integration in bestehenden Workflow</h3>
+  <p class="meta">Geschätzter Aufwand: 3–5 Tage</p>
+  <p>Ein <code>batch_runner.py</code> analog zum bestehenden <code>PWSCHNITT-BATCH</code>-Prinzip: liest dieselbe Geschossliste (<code>Name;Hoehe</code>), verarbeitet jede Zeile automatisch durch die komplette Pipeline und legt pro Geschoss ein DXF im Projektverzeichnis ab — bereit für den direkten Import in BricsCAD und die Weiterverarbeitung mit den vorhandenen LISP-Tools.</p>
+</div>
+
+<h2 id="phase13">18. Phase 13 — Dokumentation &amp; Wartung</h2>
+<div class="phase">
+  <span class="phase-nr">P13</span><h3>Dokumentation &amp; Wartung</h3>
+  <p class="meta">Geschätzter Aufwand: 2–3 Tage (initial), danach laufend</p>
+  <p>Kurzanleitung analog zur bestehenden HTML-Anleitung der LISP-Module, inkl. Troubleshooting-Tabelle und Parameter-Referenz. Versionierung der Konfigurationsdateien pro Projekt/Gebäudetyp, damit einmal gefundene gute Parametersätze wiederverwendet werden können.</p>
+</div>
+
+<h2 id="aufwand">19. Gesamtaufwandsschätzung</h2>
+<table>
+  <tr><th>Phase</th><th>Geschätzter Aufwand</th></tr>
+  <tr><td>P0 — Zieldefinition &amp; Testdaten</td><td>1–2 Tage</td></tr>
+  <tr><td>P1 — Projekt-Setup</td><td>0,5–1 Tag</td></tr>
+  <tr><td>P2 — Einlesen &amp; Vorverarbeitung</td><td>3–5 Tage</td></tr>
+  <tr><td>P3 — Geschosszuschnitt</td><td>1–2 Tage</td></tr>
+  <tr><td>P4 — Normalenschätzung</td><td>1–2 Tage</td></tr>
+  <tr><td>P5 — Ebenensegmentierung</td><td>4–7 Tage</td></tr>
+  <tr><td>P6 — Wand-Klassifizierung</td><td>3–5 Tage</td></tr>
+  <tr><td>P7 — Fragment-Clustering</td><td>4–6 Tage</td></tr>
+  <tr><td>P8 — Wandpaarung &amp; Achsberechnung</td><td>5–8 Tage</td></tr>
+  <tr><td>P9 — Eckenschluss &amp; Grundrisspolygon</td><td>5–8 Tage</td></tr>
+  <tr><td>P10 — DXF-Export</td><td>2–3 Tage</td></tr>
+  <tr><td>P11 — Kalibrierung (parallel zu P5–P9)</td><td>5–10 Tage (überlappend)</td></tr>
+  <tr><td>P12 — Integration</td><td>3–5 Tage</td></tr>
+  <tr><td>P13 — Dokumentation</td><td>2–3 Tage</td></tr>
+  <tr><td><strong>Gesamt (grobe Summe, mit Überlappung P11)</strong></td><td><strong>ca. 5–7 Arbeitswochen</strong> bei einer Person, in Teilzeit entsprechend länger</td></tr>
+</table>
+<div class="box tipp">
+  <div class="box-titel">Tipp — Meilenstein statt Big-Bang</div>
+  <p>Nach Phase 6 (Wand-Klassifizierung) existiert bereits ein nutzbares Zwischenergebnis, das den CloudCompare-RANSAC-Ansatz in der Qualität übertrifft (bessere Vorfilterung). Empfehlung: nach P6 einen ersten Praxistest einplanen, bevor in die aufwendigeren Phasen 7–9 investiert wird.</p>
+</div>
+
+<h2 id="risiken">20. Risiken &amp; Grenzen</h2>
+<ul>
+  <li>Stark abweichende Bauzustände (historische Gebäude mit unregelmäßigen, gekrümmten Wänden) sprengen das Grundmodell „ebene Wandfläche" und benötigen Sonderbehandlung</li>
+  <li>Sehr dünn beschossene Bereiche (Verdeckungen im Scan) liefern keine ausreichende Punktdichte für zuverlässige Ebenenerkennung</li>
+  <li>Reine Software-Entwicklung ohne dedizierten Entwickler im Haus verlängert die Kalibrierphasen (P5, P8, P9, P11) erfahrungsgemäß deutlich über die reine Programmierzeit hinaus</li>
+  <li>Ergebnis bleibt eine Rohgeometrie-Unterlage — eine finale Prüfung/Freigabe der erzeugten Wandachsen durch eine Person bleibt in jedem Fall notwendig</li>
+</ul>
+
+<footer>
+  Interner Entwicklungsplan · Python-Pipeline zur automatisierten Wanderkennung · Ergänzung zum Chatprotokoll Punktwolken-Workflows vom 04./05.07.2026
+</footer>
+
+</body>
+</html>

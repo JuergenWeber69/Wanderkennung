@@ -1,0 +1,39 @@
+# Standard-Parametersatz. Pro Gebäudetyp/Scanner als
+# config/parameter_<projekttyp>.yaml kopieren und anpassen (siehe Phase 11).
+
+# Phase 2 — Vorverarbeitung
+sor_nb_neighbors: 8
+sor_std_ratio: 1.2
+voxel_size: 0.004          # 4 mm
+
+# Phase 4 — Normalenschätzung
+normal_search_radius: 0.02
+normal_max_nn: 30
+normal_orient_k: 15
+
+# Phase 5 — Ebenensegmentierung (RANSAC)
+epsilon_plane: 0.015
+min_points_plane: 800
+ransac_n: 3
+ransac_num_iterations: 2000
+max_planes: 60
+
+# Phase 6 — Wand-Klassifizierung
+normal_threshold_deg: 25    # Toleranz um 90° Vertikalität
+wand_min_hoehe: 2.0
+wand_min_breite: 0.4
+
+# Phase 7 — Fragment-Clustering
+cluster_eps: 0.3
+cluster_min_samples: 1
+
+# Phase 8 — Wandpaarung
+wandstaerke_min: 0.08
+wandstaerke_max: 0.40
+parallelitaet_toleranz_deg: 5
+
+# Phase 9 — Eckenschluss
+eckenschluss_suchradius: 0.15
+
+# Phase 10 — DXF-Export
+dxf_layer_wandachsen: WAND_ACHSEN

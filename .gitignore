@@ -1,0 +1,16 @@
+venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+
+# Punktwolken- und Ausgabedaten (nicht versionieren)
+*.e57
+*.las
+*.laz
+*.pcd
+*.ply
+*.dxf
+
+data/
+output/
