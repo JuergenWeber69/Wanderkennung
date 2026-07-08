@@ -34,3 +34,7 @@ wanderkennung/
 
 Projekt-Setup (Phase 1) abgeschlossen. Die Verarbeitungsmodule sind als
 Gerüst angelegt und werden Phase für Phase implementiert (siehe Entwicklungsplan).
+
+Zieldefinition (Phase 0) siehe `docs/phase0_testdaten.md`: Genauigkeitsanforderung
+Wandachse ±2 cm, Wandstärke ±1 cm. Testdatensatz (LAS) steht noch aus, Ablage
+vorgesehen unter `tests/data/`.
