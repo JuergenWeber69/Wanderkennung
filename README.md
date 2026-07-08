@@ -30,11 +30,25 @@ wanderkennung/
 └── tests/                     # Unit-Tests je Modul
 ```
 
-## Status
+## Verwendung (Zwischenstand)
 
-Projekt-Setup (Phase 1) abgeschlossen. Die Verarbeitungsmodule sind als
-Gerüst angelegt und werden Phase für Phase implementiert (siehe Entwicklungsplan).
+Phasen 0–6 sind implementiert; `pipeline.py` führt sie für ein Geschoss aus und
+schreibt statt eines finalen DXF (Phase 10 folgt noch) eine eingefärbte
+Checkpoint-PLY (Wandkandidaten rot, übrige erkannte Ebenen grau) zur visuellen
+Kontrolle, z. B. in CloudCompare oder MeshLab:
+
+```bash
+python pipeline.py <eingabe.las> config/parameter_default.yaml checkpoint.ply
+# optional mit Geschosszuschnitt:
+python pipeline.py <eingabe.las> config/parameter_default.yaml checkpoint.ply <z_min> <z_max>
+```
+
+## Status
 
 Zieldefinition (Phase 0) siehe `docs/phase0_testdaten.md`: Genauigkeitsanforderung
 Wandachse ±2 cm, Wandstärke ±1 cm. Testdatensatz (LAS) steht noch aus, Ablage
 vorgesehen unter `tests/data/`.
+
+Phase 1 (Projekt-Setup) bis Phase 6 (Wand-Klassifizierung) sind implementiert
+und gegen synthetische Daten verifiziert. Phase 7–10 (Fragment-Clustering,
+Wandpaarung, Eckenschluss, DXF-Export) sind noch offen — siehe Entwicklungsplan.

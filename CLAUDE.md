@@ -17,7 +17,7 @@ python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-python pipeline.py <eingabe> <config.yaml> <ausgabe.dxf>
+python pipeline.py <eingabe> <config.yaml> <ausgabe.ply> [<z_min> <z_max>]
 python batch_runner.py <eingabe> <geschosse.csv> <config.yaml> <ausgabe_verzeichnis>
 ```
 
@@ -35,7 +35,7 @@ Rohpunktwolke → io_utils/reader.py → preprocessing/denoise.py → preprocess
   → io_utils/writer_dxf.py (ezdxf)
 ```
 
-- `pipeline.py` — orchestrates all phases for a single floor; loads a YAML config and will wire the modules together as they're implemented.
+- `pipeline.py` — orchestrates phases 2-6 for a single floor (read → denoise/downsample → optional height slice → normals → RANSAC plane segmentation → wall classification), then writes a checkpoint PLY (wall candidates in red, other detected planes in gray) instead of a DXF — Phase 7-10 aren't implemented yet, so there's no fragment clustering, axis computation, corner closing, or DXF export. This checkpoint output is exactly the "visual inspection after each phase" practice the plan calls for; once Phase 7-10 land, `run()` extends past wall classification and the final output switches to real DXF via `io_utils/writer_dxf.py`.
 - `batch_runner.py` — reads a `Name;Hoehe` floor list (same format as the existing LISP tool `PWSCHNITT-BATCH`) and runs `pipeline` per floor, writing one DXF per floor. This is the integration point with the existing BricsCAD/LISP workflow (Phase 12).
 - `config/parameter_default.yaml` — all tunable thresholds (RANSAC distance, angle tolerances, cluster radius, wall thickness bounds, etc.). **Never hardcode these values in module code** — the plan explicitly calls out per-scanner/per-building-type recalibration (Phase 11) as a first-class requirement, so thresholds must stay in per-project YAML files named `config/parameter_<projekttyp>.yaml`.
 - I/O lives in `io_utils/`, not `io/` — a top-level package named `io` cannot be imported at all on Python 3.11+ (`io` is a frozen stdlib module and always wins over a same-named package on `sys.path`), so don't rename it back.
