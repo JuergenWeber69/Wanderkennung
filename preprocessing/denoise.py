@@ -2,4 +2,8 @@
 
 
 def denoise_and_downsample(pcd, sor_nb_neighbors, sor_std_ratio, voxel_size):
-    raise NotImplementedError
+    pcd, _ = pcd.remove_statistical_outlier(
+        nb_neighbors=sor_nb_neighbors, std_ratio=sor_std_ratio
+    )
+    pcd = pcd.voxel_down_sample(voxel_size=voxel_size)
+    return pcd

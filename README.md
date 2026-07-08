@@ -21,7 +21,7 @@ pip install -r requirements.txt
 ```
 wanderkennung/
 ├── config/                    # Parametersätze je Gebäudetyp/Scanner
-├── io/                        # E57/LAS-Einlesen, DXF-Export
+├── io_utils/                   # E57/LAS-Einlesen, DXF-Export
 ├── preprocessing/             # Rauschfilterung, Downsampling, Geschosszuschnitt
 ├── geometry/                  # Normalen, Ebenensegmentierung, Wandklassifizierung,
 │                               # Clustering, Wandpaarung, Eckenschluss
