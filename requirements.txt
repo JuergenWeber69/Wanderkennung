@@ -1,5 +1,6 @@
 open3d
 laspy
+lazrs
 pye57
 numpy
 scikit-learn

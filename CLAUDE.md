@@ -39,6 +39,7 @@ Rohpunktwolke → io_utils/reader.py → preprocessing/denoise.py → preprocess
 - `batch_runner.py` — reads a `Name;Hoehe` floor list (same format as the existing LISP tool `PWSCHNITT-BATCH`) and runs `pipeline` per floor, writing one DXF per floor. This is the integration point with the existing BricsCAD/LISP workflow (Phase 12).
 - `config/parameter_default.yaml` — all tunable thresholds (RANSAC distance, angle tolerances, cluster radius, wall thickness bounds, etc.). **Never hardcode these values in module code** — the plan explicitly calls out per-scanner/per-building-type recalibration (Phase 11) as a first-class requirement, so thresholds must stay in per-project YAML files named `config/parameter_<projekttyp>.yaml`.
 - I/O lives in `io_utils/`, not `io/` — a top-level package named `io` cannot be imported at all on Python 3.11+ (`io` is a frozen stdlib module and always wins over a same-named package on `sys.path`), so don't rename it back.
+- LAZ (compressed LAS) reading needs a decompression backend beyond `laspy` itself — `lazrs` is in `requirements.txt` for this. Without it, `laspy.open()` on a `.laz` file raises at read time even though the code path is identical to `.las`.
 
 ## Conventions
 
